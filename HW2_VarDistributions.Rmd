@@ -1,0 +1,81 @@
+---
+title: "HW2_VarDistributions"
+author: "Adrianna Pops"
+date: "2024-01-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Response Variables and Suitable Distribution
+
+Identify at least one response or outcome variable. What would be a suitable probability distribution
+for your response variable?
+
+One response variable I would like to observe is Video Like Count. Like Count is a continuous variable that I think can be modelled with a Poisson distribution.
+
+```{r vardist}
+library(tidyverse)
+tiktok = read.csv("/Users/ampops/Desktop/tiktok.csv")
+as_tibble(tiktok)
+```
+## Summary Stats
+
+Present summary statistics of the variable(s) in your dataset using nice tables.
+
+```{r sumstats}
+tt_eda <- select(tiktok, X, claim_status, verified_status, author_ban_status, video_duration_sec, video_view_count, video_like_count)
+as_tibble(tt_eda)
+summary(tt_eda)
+```
+
+## Exploratory Data Analysis
+
+Carry out an exploratory data analysis (EDA) by producing appropriate graphics to investigate
+variations and co-variations in categorical and continuous variables. Be creative in presenting variations
+and co-variations.
+
+```{r graphics}
+library(ggplot2)
+ggplot(data = tt_eda) +
+  geom_bar(mapping = aes(x = author_ban_status, fill = verified_status), position = "dodge") + 
+  xlab("Author Ban Status")
+
+ggplot(data = sample_n(tt_eda, size = 1000), aes(x = video_duration_sec, y = video_like_count, color = verified_status)) +
+  geom_point() + geom_smooth() + xlab("Video Duration in Seconds") + ylab("Video Like Count") 
+
+ggplot(data = sample_n(tt_eda, size = 1000), aes(x = author_ban_status, y = video_like_count, color = verified_status)) +
+  geom_boxplot() + xlab("Author Ban Status") + ylab("Video Like Count")
+```
+
+## The Process
+Based on the findings of your EDA, briefly discuss the steps of a statistical modelling process.
+
+Using the pre-scrubbed tiktok dataset provided I first wanted to see what is the relationship if any between verified and non verified users and ban statuses for my categorical graphic. 
+
+To visualize co-variation for continuous variables I wanted to use video duration and video like count based on verified status. 
+
+Finally, For the combination of categorical and continuous variables I wanted to see what is the relationship if any between verified status and video like count using ban status as an explanatory variable. 
+
+Once those were decided, I needed to determine the appropriate model to visualize the data. Because the numbers in this dataset were large I took a random sample of 1000 so the points and bars can be better seen on the graph. To fit the data to a model I would need to estimate the parameters based on the chosen distribution.  
+
+## Feedback
+
+Good job! It would enhance the analysis if you could provide explanations and interpretations for the graphs you've generated. Remember, the purpose of exploratory data analysis is to gain a deeper understanding of the variables, so providing insights into the patterns or trends observed in the graphs will greatly contribute to the overall analysis.
+
+
+The last thing is statistical modeling process comprises the following key steps:
+
+1. Specifying the Model:
+In Step 1, the model is defined by specifying an equation for the response variable or a function thereof. This equation links the response to an optimal set of explanatory variables.
+
+2. Estimating Model Parameters:
+Moving on to Step 2, the model parameters are estimated, and the precision of these estimates is rigorously assessed.
+
+3. Checking Model Adequacy
+Step 3 involves a critical evaluation of the model's adequacy.
+
+4. Inferences and Predictions:
+Finally, in Step 4, the established model is utilized for making insightful inferences or predictions.

@@ -1,0 +1,80 @@
+---
+title: "HW5_Inferences_GLMS"
+author: "Adrianna Pops"
+date: "2024-02-12"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. (8 pts) Pairs of images of faces of 1072 humans were used to train and test an automatic face recognition algorithm. The experiment used the recognition software to match the first image of each person [called a probe] to one of the remaining 2143 images. Ideally a match is made to the other image of the same person [called the target]. A successful match yielded a response of $y_i$ = 1 and a match to any other person yielded a response of $y_i$ = 0. One predictor variable, the absolute difference in mean standardized eye region pixel intensity between the probe image and its corresponding target image, is used.
+
+Write an expression for the log-likelihood for a saturated model assuming a separate parameter for each observation. Next write an expression for the log-likelihood for the model of interest for this problem. Finally derive an algebraic expression for the deviance statistic.
+
+I'm assuming that the responses are measured in successes yi = 1 and a failure is measured as yi = 0 that an appropriate to model the response as a Bernoulli Binomial distribution where :
+
+## link function: 
+$g(\mu) = log\frac{\pi_i}{1 - \pi_i} = log\frac{\mu}{1 - \mu}$
+
+## mass function: 
+$f(y;\pi_i) = (n/y)\pi_i^y(1 - \pi_i)^{n - y}$ i = 0, 1
+
+## the saturated model
+$E(Y_i) = n\pi_i \space and \space \hat{\mu_i} = y$.
+
+I let $Y \sim Bin(y;\pi)$ denote the log likelihood function where:
+
+$f(y;\pi_i)$ = $exp \Bigg[ylog\pi - ylog(1 - \pi) + nlog(1 - \pi) + log \bigg(\substack{n \\y}\bigg)\Bigg]$
+
+$L(\pi_i; y) = \sum\limits^N_{i = 1}[ylog\pi_i + (n_i - y_i)log(1 - \pi_i) + log \bigg( \substack{n_i\\y_i}\bigg)]$ and 
+
+$\pi_i = exp(ylogx_i\beta_i) = exp(\beta_0 + \beta_1x_{i1})$ for a match with the target.
+
+I know the deviance is 2 times the difference of the saturated model and the model of interest for a binomial model the deviance statistic could look like:
+
+$2[L(b_{max};y) - L(b;y)] = 2\sum\limits^N_{i = 1}[y_ilog\frac{y_i}{\hat{y_i}} + (n_i - y_i)log(\frac{n_i - y_i}{n_i - \hat{y_i}})]$
+
+
+2. (7 pts) Derive an algebraic expression for deviance for a negative binomial response variable.
+
+Negative Binomials parameters are (r, $\theta$) where $Y \sim NBin(r, \theta)$
+I imagine the negative binomial deviance statistic is similar to the Binomial deviance statistic.
+
+$2[L(\theta_{max};y) - L(\theta;y)] = 2\sum\limits^N_{i = 1}log \frac{y_i + \theta_i}{y_i} + y_ilog\frac{\theta_i}{y_i} - y_i log (\frac{\theta_i - y_i}{\theta_i - \hat{y_i}})$
+
+
+3. (5 pts) Suppose we would like to determine the effect of age, sex, height, mean daily food intake and mean daily energy expenditure on the weights of a group of US adults. Identify the response variable, the explanatory variables, and write down the linear predictor in terms of the explanatory variables. To test if there is effect of age on a person’s weight write the null and alternative hypotheses, corresponding Wald test statistic and an expression for (1 − $\alpha$) % confidence interval.
+
+Weights are modelled using a Normal Distribution. Since age, sex, height, mean daily food intake, and mean daily energy expenditure are thought to affect the weights of a group of adults, weights are the response variable and the others are predictor variables. 
+
+The linear predictor could be modelled as follows: 
+$\eta_i = log(\mu_i) = \beta_0 + \beta_1x_{i1} + \beta_2x_{i2} + \beta_3x_{i3} + \beta_4x_{i4} + \beta_5x_{xi5}$ where $\beta_1$ = age.
+
+The hypotheses to test whether age affects a persons weight of a group of adults:
+$H_0: \beta_1 = 0 $
+$H_a: \beta_1 \ne 0$
+
+The Wald test statistic can be written as:
+$\frac{\hat{\beta_1}}{\sqrt(Var(\beta_1))}$
+
+The expression for a 1 - $\alpha$ % confidence interval can be written as:
+$\hat{\beta_1} \pm z_{1-{\frac{\alpha}{2}}}\sqrt(\hat{Var}(\hat{\beta_1})$
+
+4. (5 pts) Set the null and alternative hypotheses to determine if mean daily food intake and mean daily energy expenditure do not have any impact on a person’s weight. The alternative hypothesis should include all the relevant regression coefficients and the null hypothesis should include a reduced number of regression coefficients. Write down the test statistic and its sampling distribution.
+
+To determine if mean daily food intake and mean daily energy expenditure do not have an impact on a person's weight, the hypotheses can be written as:
+
+$H_0: \beta_4 = \beta_5 = 0$
+$H_a: \beta_4 \space or \space \beta_5 \ne 0$
+
+At least one of them will not equal zero if the alternative hypothesis is true.
+
+The Wald test statistic is: $(\hat{\beta} - \beta)'J(\hat{\beta})(\hat{\beta} - \beta)$
+because beta is 2 dimensional, bivariate normal, with a 2 dimensional square matrix.
+
+The sampling distribution for the Wald statistic is Chi- squared with 2 degrees of freedom since there are two parameters tested under the null hypothesis.
+

@@ -1,0 +1,126 @@
+---
+title: "HW3_Distributions_GLM"
+author: "Adrianna Pops"
+date: "2024-01-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. (6 pts) The following associations can be described by generalized linear models. For each one, identify the response variable and the explanatory variables, select a probability distribution for the response (justifying your choice) and write down the systematic component (linear predictor).
+
+  + The effect of age, race, BMI (body mass index), mean daily food intake and mean daily energy expenditure on a person’s total cholesterol level.
+  
+  
+  Response Variable $Y_i$
+    
+  + total cholesterol level
+  
+  
+  Explanatory Variables $x_i, x_1, x_2, x_3, x_4, x_5$:
+    
+  + age
+    
+  + race
+    
+  + BMI
+    
+  + mean food intake
+    
+  + mean energy expenditure
+  
+  
+  Probability Distribution and Justification: $Y_i \sim N(\mu_i, \space \sigma^2)$
+  
+I think a Normal distribution would be best because total cholesterol levels are continuous health data that is either normally distributed or skewed where the average of the random sample is normally distributed)
+  
+  
+  Systematic Component (Linear Predictor):
+  
+  $$ \beta_0 + \beta_1x_{i1} + \beta_2x_{i2} + \beta_3x_{i3} + \beta_4x_{i4} + \beta_5x_{i5} $$
+  
+  + The proportions of laboratory mice that became infected after exposure to bacteria when six different exposure levels are used and 10 mice are exposed at each level.
+  
+  Response Variable $Y_i$
+    
+  + laboratory mice
+  
+  Explanatory Variables $x_1, x_2, x_3, x_4, x_5, x_6$:
+    
+  + exposure level 1 bacteria
+  + exposure level 2 bacteria
+  + exposure level 3 bacteria
+  + exposure level 4 bacteria
+  + exposure level 5 bacteria
+  + exposure level 6 bacteria
+    
+  
+  Probability Distribution and Justification: $Y_i \sim binomial(n, \space \pi_i)$
+  
+A suitable probability distribution would be a binary binomial distribution because they are measuring success and failures in mice. A success or 1 is a mouse becoming infected at any exposure level and a failure or 0 is a mouse not becoming infected at any/all exposure levels.
+  
+  Bernoulli Binary Binomial (Success or Failure) 
+  
+$$ Y = \begin {cases}1 \space became \space infected \\ 0 \space did \space not \space become \space infected\end{cases}$$
+  Systematic Component (Linear Predictor):
+  
+  $$ E(Y_i) = \mu_i = \beta_{0} + \beta_1x_{i1} + \beta_2x_{i2} + \beta_3x_{i3} + \beta_4x_{i4} + \beta_5x_{i5} +\beta_6x_{i6} $$
+
+  + The association between the number of health insurance claims per year and the number of people in the household, the household income, the number of children, the number of disabled people.
+  
+  Response Variable $Y_i$:
+    
+  + health insurance claims
+  
+  Explanatory Variables $x_1, x_2, x_3, x_4$:
+    
+  + number of people in household
+  + household income
+  + number of children
+  + number of disable people
+  
+  Probability Distribution and Justification: $Y_i \sim \lambda (\lambda_i)$
+  
+  A suitable distribution would be Poisson because its counting how many healthcare claims per year based on the explanatory variables. 
+  
+  Systematic Component (Linear Predictor):
+  
+  $$log\lambda_i = \beta_0 + \beta_1x_{i1} + \beta_3x_{i2} + \beta_3x_{i3} + \beta_4x_{i4}$$
+
+2. (8 pts) Show that the following probability distributions belong to the exponential family of distributions. Give the necessary and sufficient justifications for each case.
+  + Geometric distribution
+
+  number of failures until you get your first success.
+  
+  + Gamma distribution with a known shape parameter $\alpha$, but an unknown scale parameter $\beta$
+  
+  $$f(y;\alpha, \beta) = \frac{\beta^a}{\Gamma(\alpha)}y^{\alpha - 1}e^{-y\beta}$$
+  take the ln of both sides to get rid of base e
+  
+  ln(f(y; a, b)) = ln($\frac{\beta^\alpha}{\Gamma(\alpha)\beta^\alpha}x^{\alpha-1}e^{-y\beta}$)
+  
+  simplify and identify component
+  = $\alpha$ ln(y) - $\beta$y - ln($\Gamma(a)b^a$) + $\alpha$ - 1 * ln(y)
+  
+  + a(y) = -y 
+  + b($\theta$) = $\frac{1}{\theta}$  
+  + c($\theta$) = $\alpha \space ln(\theta)$
+  + d(y)= $-ln\Gamma(\alpha) + (\alpha- 1)ln(y)$
+  
+
+3. (8 pts) Using these expressions for the mean and the variance, verify the mean and the variance for a gamma random variable and a negative binomial random variable. Recall that, when $\theta$ is 1-dimensional and the range of Y does not depend on $\theta$, a distribution that can be written in the form:
+
+$$f_Y (y;\theta) = exp\space a\{(y)b(\theta) + c(\theta) + d(y)\}$$ 
+belongs to the 1-parameter exponential family of distributions. In addition, $[a(Y)] = − \frac{c'(\theta)}{b'(\theta)}$ and $b'(\theta)$ and $Var[a(Y)] = \frac{b''(\theta)c'(\theta)−c''(\theta)b'(\theta)}{[b'(\theta)]^3}$
+
+
+For the gamma distribution to find mean it's just the derivative of negative $c(\theta)$ over $b(\theta)$ which is $\frac{\alpha}{\theta}$ over $-\frac{1}{\theta^2}$ which = $-\alpha\theta$
+
+The variance is the double derivative of $b(\theta)$ * the derivative of $c(\theta)$ - the double derivative $c(\theta)$ * the derivative of $b(\theta)$ over the derivative of $b(\theta)$ cubed $\frac{\frac{2}{\theta^3}*\frac{\alpha}{\theta} - \frac{\alpha}{\theta^2}*-\frac{1}{\theta^2}}{-\frac{1}{\theta}^3}$ which is ultimately = $\alpha\theta^2$
+
+4. (3 pts) Give an example of a probability distribution that does not belong to the family of exponential distributions.
+
+Uniform probability distributions do not fit in the family of exponential distributions because the support of Y depends on $\theta$. 
+

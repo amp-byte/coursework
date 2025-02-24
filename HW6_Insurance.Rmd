@@ -1,0 +1,311 @@
+---
+title: "HW6_Insurance"
+author: "Adrianna Pops"
+date: "2024-02-13"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1
+
+```{r insurance}
+library(tidyverse)
+library(ggplot2)
+library(glmnet)
+library(rsample)
+
+# read the data in and show the first 6 rows of the data
+insurance <- read.csv("/Users/ampops/Desktop/dsci627/data/insurance.csv")
+head(insurance)
+class(insurance)
+```
+
+The data has 7 columns:
+
+1. age: Numeric, the age of the individual
+2. sex: Character, the gender of the individual
+3. bmi: Numeric, range 15 - 55, the body mass index of the individual
+4. children: Numeric, range 0 - 5, the number of children the individual has
+5. smoker: Character, shows whether the individual smokes or not
+6. region: Character, shows the region the individual lives in
+7. charges: Numeric, range 0 - 65000, the charges billed to the individual
+
+```{r check}
+# check the df
+head(insurance)
+
+# check the stats
+summary(insurance)
+```
+
+**Observations about the data:**
+
+1. For age the mean and median are very close to equal which shows age is normally distributed.
+2. BMI also has almost identical mean and median.
+3. Roughly equal numbers of men and women tested.
+4. As the number of children goes up the counts for individuals having that number goes down.
+5. The number of people in each region is roughly the same.
+6. The mean is > the median which shows that Charges is right skewed. The min and max values differ from the 1st and 3rd quartiles so there may be outliers in the charge data.
+
+```{r hists}
+library(gridExtra)
+
+# age hist
+p1 <- ggplot(insurance) +
+  geom_bar(aes(x = age)) +
+  labs(x = "Age") +
+  ggtitle("Age")
+
+# bmi hist
+p2 <- ggplot(insurance) +
+  geom_histogram(aes(x = bmi)) +
+  labs(x = "BMI") +
+  ggtitle("BMI")
+
+# Bar chart for child count
+p3 <- ggplot(insurance) +
+  geom_bar(aes(x = children)) +
+  labs(x = "Number of Children") +
+  ggtitle("Number of Children")
+
+# bar chart for gender
+p4 <- ggplot(insurance) + 
+  geom_bar(aes(x = sex)) + 
+  ggtitle("Gender")
+
+#bar chart for smoker/non
+p5 <- ggplot(insurance) + 
+  geom_bar(aes(x = smoker)) + 
+  ggtitle("Smoker")
+
+#bar char for regions
+p6 <- ggplot(insurance) + 
+  geom_bar(aes(x = region)) + 
+  ggtitle("Region")
+
+grid.arrange(p1, p2, p3, p4, p5, p6, nrow = 3, ncol = 3)
+```
+
+**(5 pts) The objective is to predict the average individual medical costs billed by health
+insurance. Identify the response variable and its probability distribution. Show that the
+distribution belongs to the exponential family.**
+
+The response variable for this objective is average individual medical costs billed by health insurance based on certain factors like age groups, gender, smoking, bmi, number of children, and the region one lives in.
+
+A suitable distribution to model this could be the gamma distribution, as individual costs billed by insurance companies likely aren't normally distributed and are postively skewed. Since cost is a continuous variable and I'm not looking to measure counts over a fixed interval or number of successes/failures I can also eliminate the Bernoulli and Poisson distributions.
+
+To show that the Gamma distribution belongs to the exponential family I must determine the equivalent of a(y), b(theta), c(theta), and d(y) and that it depends on a single parameter theta.
+
++ Random: $Y \sim \Gamma(\alpha, \beta)$
+
++ Systematic: $\beta_0 + \beta_1x_{i1} + \beta_2x_{i2} + \beta_3x_{i3} + \beta_4x_{i4} + \beta_5x_{i5} + \beta_6x_{i6}$
+
++ Link: $g(\mu) = X\beta$
+
++ Exponential: $f(y, \alpha, \beta) = \frac{1}{\beta^\alpha \Gamma(\alpha)}y^{\alpha -1}e^{\frac{-y}{\beta}}$
+
+$$f(x | \alpha, \beta) = \frac{1}{\Gamma(\alpha)\beta^\alpha}X^{\alpha - 1}exp(-\frac{X}{\beta})$$
+$$exp(-log(\Gamma(\alpha)\beta^\alpha))exp((\alpha - 1log(x))exp(-\frac{X}{\beta})$$
+
+$$exp([(\alpha - 1) \frac{-1}{\beta}][\substack{log(x)\\x}] - (log(\Gamma(\alpha)) + \alpha log (\beta)))$$
+where $a(\eta)$ = 1, $\eta(\alpha, \beta)$ = $[(\alpha - 1) \frac{-1}{\beta}]$, T(x) = $[\substack{log(x)\\x}]$, and $\gamma(\alpha, \beta)$ = $(log(\Gamma(\alpha)) + \alpha log (\beta)$
+
++ In canonical form:
+
+$exp([\eta_1, \eta_2][\substack{log(x)\\x}] - (log(\Gamma(\eta_1 + 1))-(\eta_1 + 1)log(-\eta_2)))$
+
+a(y) = y, $b(\theta) = -\theta$, $c(\theta) = \phi log \theta = log\Gamma(\phi)$, and $d(y) = (\phi - 1) log y$.
+
+# 2
+
+**(5 pts) Run an exploratory data analysis (EDA) to identify potential predictors. Write the
+systematic component and the link function.**
+
+What variation occurs between the variables?
+What kind of covariation occurs?
+
+```{r eda}
+# Scatter plot age vs. charges
+## This shows a positive change: as people get older they pay more in medical 
+## costs
+ggplot(insurance, aes(age, charges, color = sex)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "Age", y = "Charges") +
+  ggtitle("Age vs. Charges")
+
+
+#Scatter plot for age vs charges depending on smoking
+## When you add smoker it shows the same positive trend. You will be paying 
+## more as you age if you smoke than people who will pay more as they age and 
+## do not smoke
+ggplot(insurance, aes(x = age, y = charges, color = smoker)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "Age", y = "Charges") +
+  ggtitle("Age vs. Charges by Smoker")
+
+# Scatter plot bmi vs. charges on sex
+## This one doesn't say much to me
+ggplot(insurance, aes(x = bmi, y = charges, color = sex)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "BMI", y = "Charges") +
+  ggtitle("BMI vs. Charges by Sex")
+
+# Scatter plot bmi vs charges depending on smoking
+## However adding smoking, this one shows that smoking affects how much 
+## someone is paying for medical based on BMI. If they smoke and have a higher 
+## BMI they pay more, where if you sont smoke there is little correlation to 
+## high medical costs.
+ggplot(insurance, aes(x = bmi, y = charges, color = smoker)) +
+  geom_point() +
+  geom_smooth() +
+  labs(x = "BMI", y = "Charges") +
+  ggtitle("BMI vs. Charges by Smoker")
+
+# Boxplot charges dependent on number of children
+## children do not really affect how much someone is paying in medical costs.
+ggplot(insurance, aes(x = children, y = charges)) + 
+  geom_boxplot() +
+  ggtitle("Charges by Number of Children")
+
+#bar chart for average charges based on children
+# average charges based on children
+## this also shows me that number of children doesnt really matter in terms of 
+## medical costs.
+ggplot(insurance, aes(x=children, y=charges)) + 
+  stat_summary(fun = "mean", geom = "bar") +
+  ggtitle("Average Charges by Number of Children")
+
+# Boxplot sex vs. charges 
+## there is a greater variation in how much someone is paying in medical costs. 
+##It looks like men have a higher Q3 than women but the mean looks about the
+## same.
+ggplot(insurance, aes(x = sex, y = charges)) +
+  geom_boxplot() +
+  labs(x = "Sex", y = "Charges") +
+  ggtitle("Sex vs. Charges")
+
+# bar chart average charges by sex
+ggplot(insurance, aes(x = sex, y = charges)) + 
+  stat_summary(fun = "mean", geom = "bar") +
+  ggtitle("Average Charges by Sex")
+
+# Boxplot smoking vs. charges 
+## smoking shows the greatest variation in how much someone pays. It also shows 
+## that gender doesnt influence medical costs that much regardless of whether 
+## the answer was yes or no.
+ggplot(insurance, aes(x = smoker, y = charges, color = sex)) +
+  geom_boxplot() +
+  labs(x = "Smoking Status", y = "Charges") +
+  ggtitle("Smoking Status vs. Charges by Sex")
+
+# Boxplot region vs. charges by sex
+## Regionally appear that men and women who live in the southeast pay more for 
+## medical costs than any other region. Means look relatively similar however, 
+## so based on averages there is not a lot of difference here.
+ggplot(insurance, aes(x = region, y = charges, color = sex)) +
+  geom_boxplot() +
+  labs(x = "Region", y = "Charges") +
+  ggtitle("Region vs. Charges by Sex")
+
+# Boxplot region vs. charges by smoker
+## Here we see smokers are paying more for medical costs in the southeat and 
+## west than any other region based on the average.
+ggplot(insurance, aes(x = region, y = charges, color = smoker)) +
+  geom_boxplot() +
+  labs(x = "Region", y = "Charges") +
+  ggtitle("Region vs. Charges by Smoker")
+
+# bar chart for average charges by region
+ggplot(insurance, aes(x = region, y = charges)) + 
+  stat_summary(fun = "mean", geom = "bar") +
+  ggtitle("Average Charges by Region")
+```
+
+# 3
+
+**(5 pts) Fit a general linear model and check if the model assumptions are valid by running
+diagnostics on your final model. Write the predicted model for the response variable with
+estimated model parameters.**
+
+```{r modelfit}
+glm1 <- glm(charges ~ ., data = insurance, family = "Gamma")
+summary(glm1)
+
+par(mfrow = c(2, 2))
+plot(glm1)
+
+anova(glm1)
+
+glm2 <- glm(charges ~ age + region + bmi + smoker, data = insurance, family = "Gamma")
+summary(glm2)
+
+par(mfrow = c(2, 2)) 
+plot(glm2)
+
+anova(glm2)
+
+glm3 <- glm(charges ~ bmi + smoker, data = insurance, family = "Gamma")
+summary(glm3)
+
+par(mfrow = c(2, 2)) 
+plot(glm3)
+
+anova(glm1, glm2, glm3)
+
+ins_anova <- select(insurance, charges, bmi, smoker)
+glm_anova<- glm(charges~ factor(smoker) + bmi ,data = ins_anova, family = "Gamma")
+summary(glm_anova)
+
+```
+
+# 4
+
+**(5 pts) Is there any evidence of interaction between smoking and the body mass index
+from the EDA? If yes, run an ANCOVA for the response including the interaction term in
+the model. Check if model assumptions are valid by running diagnostics on your model.
+Write the predicted model for the response variable with estimated model parameters.**
+
+```{r ancova}
+glm_ancova<- glm(bmi~ factor(smoker),data = ins_anova, family = "Gamma")
+summary(glm_ancova)
+
+anova(glm_ancova)
+```
+
+# 5
+
+**(5 pts) Interpret results you obtain from the models in 3 and 4**
+
+**residuals vs fitted plots:**
+residuals are not quite equally spread in glm 1 or 2 but the line is relatively horizontal. The line dips in glm 3 when I measure with fewer variables. I think there is a linear relationship in glm 1 and 2 but not 3.
+
+**normal q - q plots:**
+In glm1 there is moderate deviation in one of the tails showing a roughly normal distribution. In glm2 the deviation is larger in the tail than glm1 which tells me its straying from being normally distributed. In glm 3, there is little to no deviation which shows me that the distribution of bmi and smokers when plotted against charges is normally distributed.
+
+**scale - location plots:**
+Homoscedasticity assumptions are (maybe) satisfied in glm1 and glm2, but not glm3. 
+
+**residuals vs leverage plots:**
+In glm1, glm2, and glm3 they both follow the Cook's distance line pretty close.
+
+# 6
+
+**(5 pts) Can you infer if there is a statistically significant difference in average medical costs
+billed by health insurance across the four regions?**
+
+Yes, using Anova I can compare the averages of groups of continuous observations.
+
+```{r regions}
+# Fit a linear model with region as a predictor variable
+glmr <- glm(charges ~ region, data = insurance, family = "Gamma")
+summary(glmr)
+
+plot(glmr)
+anova(glmr)
+```

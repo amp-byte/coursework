@@ -1,0 +1,67 @@
+---
+title: "HW_BinaryModels"
+author: "Adrianna Pops"
+date: "2024-03-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## HW8 Binary Models
+
+(7 pts) The number of deaths from leukemia and other cancers among survivors of the Hiroshima atom bomb are shown in Table 7.14 in the Dobson text, classified by the radiation dose received. The data refer to deaths during the period 1950-1959 among survivors who were aged 25 to 64 years in 1950 (from data set 13 of Cox and Snell 1981, attributed to Otake 1979).
+
+a.) Obtain a suitable model to describe the dose-response relationship between radiation and the proportional cancer mortality rates for leukemia.
+
+b.) Check which of the three link functions for a binary response fits the data best. 
+
+c.) Examine how well the best model describes the data using both numerical and graphical measures.
+
+d.) Interpret the parameters of the dose-response model.
+
+```{r}
+# data
+hiroshima_df <- data.frame(leukemia = rep(c(TRUE, FALSE), each = 6),
+                 dose_rads = rep(c(0, 1, 10, 50, 100, 200), 2),
+                 cancer_freq = c(c(13, 5, 5, 3, 4, 18),c(378, 200, 151, 47, 31, 33)))
+# model fit
+model_1 <- glm(leukemia ~ dose_rads, weights = cancer_freq, data = hiroshima_df, family = "binomial")
+```
+**If dose is defined by lower end of each dose interval, a good model is given by logit**($\hat\pi$)**= -3.489 + 0.0144**
+
+**The Hosmer-Lemeshow test of goodness of fit can be obtained from the following table of observed and expected frequencies. shown in brackets**
+
+```{r}
+# predicted probabilities and expected frequencies
+df$prob <- fit$fitted.values
+df$exp  <- with(df, (freq[1:6] + freq[7:12])*(prob * leukemia + (1 - prob) * !leukemia))
+
+# sum categories
+observed <- with(df, c(freq[1:2], sum(freq[3:6]), freq[7:8], sum(freq[9:12])))
+expected <- with(df, c(exp[1:2], sum(exp[3:6]), exp[7:8], sum(exp[9:12])))
+
+# Hosmer Lemeshow test
+XHL <- sum((observed - expected)^ 2/expected)
+qchisq(XHL, df = 1)
+```
+**This gives** $\chi^2_{HL}$ **=0.374, d.f. = 1, p-value = 0.54 indicating a good fit.**
+
+Tables 7.16 and 7.17 in the Dobson text show the survival 50 years after graduation of men and women who graduate each year from 1938 to 1947 from various Faculties of the University of Adelaide (data complied by J.A. Keats). The columns labelled S contain the number of graduates who survived and the columns labelled T contain the total number of graduates. There were insufficient women graduates from the Faculties of Medicine and Engineering to warrant analysis.
+
+a.) Are the proportions of graduates who survived for 50 years after graduation the same all years of graduation?
+
+b.) Are the proportions of male graduates who survived for 50 years after graduation the same for all Faculties?
+
+c.) Are the proportions of female graduates who survived for 50 years after graduation the same for Arts and Science?
+
+d.) Is the difference between men and women in the proportion of graduates who survived for 50 years after graduation the same for Arts and Science?
+
+**Overall the percentage of women who survived 50 years after graduation was 84% higher than the percentage of men who survived 50 years after graduation**
+
+**No evidences of differences between the years of graduation and higher proportions of science graduates of either sex survived longer than other majors.**
+
+**The effect seems more pronounced for men the ratio of proportions - 1.40 than women who had a ratio of 1.18 but this is not statistically significant.**
+
+3. (8 pts) NHANES  is  an R package that has survey data collected by the US National Center for Health Statistics (NCHS). A smaller analysis dataset (analysis.rds) is created for this homework. Read the .rds file into R and explore the variables. Check the NHANES package for the description of the variables included in the analysis data set.
