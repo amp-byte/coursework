@@ -1,6 +1,6 @@
 ---
 title: "HW7_S24_Pops_Adrianna"
-author: "Adrianna Pops"
+author: "amp-byte"
 date: "2024-02-20"
 output:
   html_document:
